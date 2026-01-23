@@ -1,0 +1,24 @@
+<odoo>
+
+  <record id="action_nuur_huudas" model="ir.actions.act_window">
+    <field name="name">Нүүр Хуудас</field>
+    <field name="res_model">mandal.helpdesk.nuur</field>
+    <field name="view_mode">form</field>
+  </record>
+
+  <record id="action_hiih_ajluud" model="ir.actions.act_window">
+    <field name="name">Хийх Ажлууд</field>
+    <field name="res_model">mandal.helpdesk.ajil</field>
+    <field name="view_mode">tree,form</field>
+  </record>
+  <record id="action_heltesiin_humuusd_ajil_onooh" model="ir.actions.act_window">
+    <field name="name">Тухайн хэлтэсийн тэр ажилтанд ажил оноох</field>
+    <field name="res_model">mandal.helpdesk.ooriinbolonbusad.heltesd.ajil.onooh</field>
+    <field name="view_mode">tree,form</field>
+  </record>
+  <record id="action_huseltiin_huudas" model="ir.actions.act_window">
+    <field name="name">Хүсэлтийн хуудас</field>
+    <field name="res_model">mandal.helpdesk.huselt</field>
+    <field name="view_mode">tree,form</field>
+  </record>
+</odoo>

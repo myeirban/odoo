@@ -1,0 +1,30 @@
+<odoo>
+  <!-- ROOT MENU -->
+  <menuitem
+    id="menu_mandal_help_desk_root"
+    name="Mandal Help Desk"
+    sequence="0" />
+  <!-- CHILD MENU -->
+  <menuitem
+    id="menu_nuur_huudas"
+    name="Нүүр Хуудас"
+    parent="menu_mandal_help_desk_root"
+    action="action_nuur_huudas" />
+
+  <menuitem
+    id="menu_hiih_ajluud"
+    name="Хийх Ажлууд"
+    parent="menu_mandal_help_desk_root"
+    action="action_hiih_ajluud" />
+  <menuitem
+    id="heltesiin_ter_ajiltand_ajil_onooh"
+    name="Захирлын булан"
+    parent="menu_mandal_help_desk_root"
+    action="action_heltesiin_humuusd_ajil_onooh"
+  />
+  <menuitem
+    id="huselt_yavuulah"
+    name="Хүсэлт явуулах хуудас"
+    parent="menu_mandal_help_desk_root"
+    action="action_huseltiin_huudas" />
+</odoo>
