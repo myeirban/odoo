@@ -1,6 +1,8 @@
 from odoo import models, fields, api
 from odoo.exceptions import AccessError, ValidationError
+import logging
 
+_logger = logging.getLogger(__name__)
 class Ajil(models.Model):
     _name = 'mandal.helpdesk.ajil'
     _description = 'Тухайн ажилтны хэлтэст ирсэн ажлууд'
@@ -25,7 +27,7 @@ class Ajil(models.Model):
         'res.users',
         string="Хариуцсан ажилтан",
         tracking=True,
-        required=False
+        required=True
     )
 
     creator_user_id = fields.Many2one(
@@ -100,7 +102,7 @@ class Ajil(models.Model):
                 'state': 'in_progress',
                 'start_date': fields.Datetime.now() if not rec.start_date else rec.start_date
             })
-            rec.message_post(body="Ажил эхэллээ.")
+            # rec.message_post(body="Ажил эхэллээ.")
 
     def action_done(self):
         """Ажил дуусгах"""
@@ -118,9 +120,7 @@ class Ajil(models.Model):
                     'end_date': fields.Datetime.now(),
                     'progress': 100
                 })
-            
-            rec.message_post(body="Ажил амжилттай дууслаа.")
-
+            self.huselt_id.is_done = True
     def action_cancel(self):
         """Ажил цуцлах"""
         for rec in self:

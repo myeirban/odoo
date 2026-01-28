@@ -1,6 +1,6 @@
 {
     'name': 'Mandal Help Desk Module',
-    'version': '1.0.5',
+    'version': '1.0.7',
     'license': 'LGPL-3',
     'summary': 'Хэлтэс доторх ажлын хүсэлт, удирдлагын систем',
     'description': '''
@@ -10,7 +10,7 @@
     'author': 'myeirban bilimkhan',
     'depends': ['base', 'hr', 'mail'],
     'data': [
-        'security/helpdesk_groups.xml',
+        #'security/helpdesk_groups.xml',
         'security/security.xml',
         'security/ir.model.access.csv',
         'views/actions.xml',

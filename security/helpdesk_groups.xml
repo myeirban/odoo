@@ -1,11 +1,12 @@
 <odoo>
-  <record id="group_helpdesk_boss" model="res.groups">
-    <field name="name">Boss</field>
-    <field name="category_id" ref="base.module_category_hidden" />
-  </record>
-
   <record id="group_helpdesk_employee" model="res.groups">
     <field name="name">Helpdesk Employee</field>
-    <field name="category_id" ref="base.module_category_hidden" />
   </record>
+
+  <record id="group_helpdesk_boss" model="res.groups">
+    <field name="name">Helpdesk Manager</field>
+    <!-- NO implied_ids -->
+  </record>
+
+
 </odoo>

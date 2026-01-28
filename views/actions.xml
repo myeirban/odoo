@@ -91,10 +91,11 @@
               <field name="target_department_id" placeholder="Илгээх хэлтэс" required="1" />
               <field name="sender_department_id" readonly="1" />
               <field name="assigned_department_id" readonly="1" />
+              <field name="is_done" readonly="1" string="test" />
             </group>
           </group>
           <group>
-            <field name="description" placeholder="Хүсэлтийн тайлбар..." />
+            <!-- <field name="description" placeholder="Хүсэлтийн тайлбар..." /> -->
           </group>
         </sheet>
         <div class="oe_chatter">
@@ -138,27 +139,36 @@
           <button name="action_done" string="Дуусгах" type="object" class="oe_highlight"
             invisible="state != 'in_progress'" />
           <button name="action_cancel" string="Цуцлах" type="object"
-            invisible="state not in ['draft', 'assigned', 'in_progress']" />
+            invisible="state in ['done', 'cancel']" />
           <field name="state" widget="statusbar" statusbar_visible="draft,assigned,in_progress,done" />
         </header>
         <sheet>
           <group>
             <group>
-              <field name="name" />
-              <field name="huselt_id" readonly="1" />
-              <field name="department_id" />
-              <field name="assigned_user_id" />
+              <!-- ALL FIELDS ARE EDITABLE IN DRAFT STATE -->
+              <field name="name" readonly="state != 'draft'" />
+              <field name="huselt_id" readonly="state != 'draft'" /> <!-- Related Request - NOW
+              EDITABLE IN DRAFT -->
+              <field name="department_id" readonly="state != 'draft'" /> <!-- Department - NOW
+              EDITABLE IN DRAFT -->
+              <field name="assigned_user_id" readonly="state != 'draft'" /> <!-- Responsible Employee
+              - NOW EDITABLE IN DRAFT -->
             </group>
             <group>
+              <!-- ALL FIELDS ARE EDITABLE IN DRAFT STATE -->
               <field name="creator_id" readonly="1" />
-              <field name="deadline" />
-              <field name="start_date" readonly="1" />
-              <field name="end_date" readonly="1" />
-              <field name="progress" widget="progressbar" />
+              <field name="deadline" readonly="state != 'draft'" />
+              <field name="start_date" readonly="state != 'draft'" /> <!-- Start Date - NOW EDITABLE
+              IN DRAFT -->
+              <field name="end_date" readonly="state != 'draft'" /> <!-- End Date - NOW EDITABLE IN
+              DRAFT -->
+              <field name="progress" widget="progressbar"
+                readonly="state not in ('in_progress', 'done')" />
+              <field name="state" invisible="1" />
             </group>
           </group>
           <group>
-            <field name="description" placeholder="Ажлын тайлбар..." />
+            <field name="description" placeholder="Ажлын тайлбар..." readonly="state != 'draft'" />
           </group>
         </sheet>
         <div class="oe_chatter">
@@ -225,7 +235,7 @@
           <button name="action_done" string="Дуусгах" type="object" class="oe_highlight"
             invisible="state != 'in_progress'" />
           <button name="action_cancel" string="Цуцлах" type="object"
-            invisible="state not in ['draft', 'assigned', 'in_progress']" />
+            invisible="state in ['done', 'cancel']" />
           <field name="state" widget="statusbar" statusbar_visible="draft,assigned,in_progress,done" />
         </header>
         <sheet>
@@ -306,17 +316,57 @@
     <field name="groups" eval="[(4, ref('base.group_user'))]" />
   </record>
 
-  <!-- Ажил Domain Rule -->
-  <record id="rule_ajil_visibility" model="ir.rule">
-    <field name="name">Ажил - Харах эрх</field>
+  <!-- Ажил Domain Rule - Энгийн ажилчин (зөвхөн өөрт оноогдсон) -->
+  <record id="rule_ajil_employee_own" model="ir.rule">
+    <field name="name">Task - Employee (assigned only)</field>
     <field name="model_id" ref="model_mandal_helpdesk_ajil" />
     <field name="domain_force">
-      ['|', '|',
-      ('assigned_user_id','=',user.id),
-      ('creator_user_id','=',user.id),
-      ('department_id','in', user.employee_ids.mapped('department_id').ids)]
+      [('assigned_user_id','=',user.id)]
     </field>
-    <field name="groups" eval="[(4, ref('base.group_user'))]" />
+    <field name="groups" eval="[(4, ref('helpdesk.group_helpdesk_employee'))]" />
   </record>
+
+
+  <!-- Ажил Domain Rule - Захирал (хэлтсийн бүх ажил) -->
+  <record id="rule_ajil_boss_all" model="ir.rule">
+    <field name="name">Ажил - Захирал (бүгд)</field>
+    <field name="model_id" ref="model_mandal_helpdesk_ajil" />
+    <field name="domain_force">[(1,'=',1)]</field>
+    <field name="groups" eval="[(4, ref('helpdesk.group_helpdesk_boss'))]" />
+  </record>
+
+  <!-- Ажил оноох - Захирал харна -->
+  <record id="rule_ajil_onooh_boss" model="ir.rule">
+    <field name="name">Ажил оноох - Захирал</field>
+    <field name="model_id" ref="model_mandal_helpdesk_ajil_onooh" />
+
+    <!-- CREATE-д саад болохгүй -->
+    <field name="domain_force">[(1,'=',1)]</field>
+
+    <field name="groups" eval="[(4, ref('helpdesk.group_helpdesk_boss'))]" />
+
+    <field name="perm_read" eval="1" />
+    <field name="perm_write" eval="1" />
+    <field name="perm_create" eval="1" />
+    <field name="perm_unlink" eval="1" />
+  </record>
+
+  <!-- Ажил оноох - Ажилчин (зөвхөн өөртөө оноогдсон) -->
+  <record id="rule_ajil_onooh_employee" model="ir.rule">
+    <field name="name">Ажил оноох - Ажилчин (өөртөө оноогдсон)</field>
+    <field name="model_id" ref="model_mandal_helpdesk_ajil_onooh" />
+
+    <field name="domain_force">
+      [('assigned_user_id','=',user.id)]
+    </field>
+
+    <field name="groups" eval="[(4, ref('helpdesk.group_helpdesk_employee'))]" />
+
+    <field name="perm_read" eval="1" />
+    <field name="perm_write" eval="0" />
+    <field name="perm_create" eval="0" />
+    <field name="perm_unlink" eval="0" />
+  </record>
+
 
 </odoo>

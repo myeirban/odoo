@@ -11,7 +11,7 @@ class AjilOnooh(models.Model):
         'mandal.helpdesk.huselt',
         string="Холбогдох хүсэлт",
         ondelete='cascade',
-        required=True
+        required=False  # Changed to False to allow editing in draft state
     )
 
     # 🔹 Холбогдсон ажил
@@ -65,6 +65,21 @@ class AjilOnooh(models.Model):
         readonly=True
     )
 
+    can_edit_fields = fields.Boolean(
+        compute='_compute_can_edit_fields'
+    )
+
+    @api.depends()
+    def _compute_can_edit_fields(self):
+        for rec in self:
+            rec.can_edit_fields = self.env.user.has_group('helpdesk.group_helpdesk_boss')
+
+    @api.onchange('huselt_id')
+    def _onchange_huselt_id(self):
+        """Хүсэлт сонгоход department автоматаар тохируулагдана"""
+        if self.huselt_id and self.huselt_id.assigned_department_id:
+            self.department_id = self.huselt_id.assigned_department_id
+
     def _check_is_boss(self):
         """Захирал эсэхийг шалгах"""
         employee = self.env['hr.employee'].search(
@@ -78,24 +93,84 @@ class AjilOnooh(models.Model):
         if not (is_boss_group or is_boss_job):
             raise AccessError("Зөвхөн Захирал энэ үйлдлийг хийх эрхтэй!")
 
+    @api.constrains('start_date')
+    def _check_start_date_not_changed(self):
+        """Start date cannot be manually changed after moving out of draft state"""
+        for rec in self:
+            if rec.start_date and rec.id and rec.state not in ['draft']:
+                original = self.browse(rec.id)
+                if original.start_date != rec.start_date:
+                    raise ValidationError("Эхлэх огноог өөрчлөх боломжгүй!")
+
+    @api.constrains('end_date')
+    def _check_end_date_not_changed(self):
+        """End date cannot be manually changed after completion"""
+        for rec in self:
+            if rec.end_date and rec.id and rec.state not in ['draft', 'assigned', 'in_progress']:
+                original = self.browse(rec.id)
+                if original.end_date != rec.end_date:
+                    raise ValidationError("Дуусах огноог өөрчлөх боломжгүй!")
+
     @api.model
     def create(self, vals):
         """Ажил үүсгэх - Захирал хийнэ"""
         # Draft төлөвтэй үүсгэх үед захирал шалгахгүй
         if vals.get('state', 'draft') != 'draft':
             self._check_is_boss()
+        
+        # Ensure department is set from huselt if huselt is provided
+        if 'department_id' not in vals and vals.get('huselt_id'):
+            huselt = self.env['mandal.helpdesk.huselt'].browse(vals['huselt_id'])
+            if huselt and huselt.assigned_department_id:
+                vals['department_id'] = huselt.assigned_department_id.id
+        
         return super().create(vals)
 
     def write(self, vals):
-        """Ажил засварлах"""
-        # Ажилтан оноохдоо захирал шалгах
-        if 'assigned_user_id' in vals:
-            self._check_is_boss()
+        """Ажил засварлах - Захирал шалгах"""
+        for rec in self:
+            # In draft state, boss can edit all fields freely
+            if rec.state == 'draft':
+                # Only check boss permission if assigning user
+                if 'assigned_user_id' in vals and vals.get('assigned_user_id'):
+                    self._check_is_boss()
+            else:
+                # After draft state, enforce stricter rules
+                # Check start_date and end_date
+                if 'start_date' in vals and rec.start_date:
+                    raise ValidationError("Эхлэх огноог өөрчлөх боломжгүй!")
+                
+                if 'end_date' in vals and rec.end_date:
+                    raise ValidationError("Дуусах огноог өөрчлөх боломжгүй!")
+                
+                # Prevent changing huselt, department, and assigned user after draft
+                if 'huselt_id' in vals and rec.huselt_id:
+                    raise ValidationError("Холбогдох хүсэлтийг өөрчлөх боломжгүй!")
+                
+                if 'department_id' in vals and rec.department_id:
+                    raise ValidationError("Хэлтсийг өөрчлөх боломжгүй!")
+                
+                if 'assigned_user_id' in vals and rec.assigned_user_id:
+                    self._check_is_boss()
+                
+            # Progress update validation
+            if 'progress' in vals:
+                # if rec.state not in ['in_progress', 'done']:
+                #     raise ValidationError("Гүйцэтгэлийг зөвхөн 'Явагдаж байна' эсвэл 'Дуусгах' төлөвт шинэчлэх боломжтой!")
+                if vals['progress'] < 0 or vals['progress'] > 100:
+                    raise ValidationError("Гүйцэтгэл 0-100% хооронд байх ёстой!")
+        
         return super().write(vals)
 
     def unlink(self):
         """Ажил устгах - Захирал хийнэ"""
         self._check_is_boss()
+        
+        # Only allow deletion in draft or canceled state
+        for rec in self:
+            if rec.state not in ['draft', 'cancel']:
+                raise ValidationError("Зөвхөн ноорог эсвэл цуцлагдсан ажлыг устгах боломжтой!")
+        
         return super().unlink()
 
     def action_assign(self):
@@ -105,15 +180,23 @@ class AjilOnooh(models.Model):
             if not rec.assigned_user_id:
                 raise ValidationError("Ажилтан сонгоно уу!")
             
+            # Validate department is set
+            if not rec.department_id:
+                raise ValidationError("Хариуцах хэлтэс сонгоно уу!")
+            
+            # Validate huselt is set
+            if not rec.huselt_id:
+                raise ValidationError("Холбогдох хүсэлт сонгоно уу!")
+            
             # Ажил үүсгэх
             ajil = self.env['mandal.helpdesk.ajil'].create({
-                'name': rec.name,
-                'description': rec.description,
-                'huselt_id': rec.huselt_id.id,
-                'assigned_user_id': rec.assigned_user_id.id,
-                'department_id': rec.department_id.id,
+                'name': rec.name or "Шинэ ажил",
+                'description': rec.description or "",
+                'huselt_id': rec.huselt_id.id if rec.huselt_id else False,
+                'assigned_user_id': rec.assigned_user_id.id,  # Fixed variable name
+                'department_id': rec.department_id.id if rec.department_id else False,
                 'state': 'assigned',
-                'ajil_onooh_id': rec.id
+                'ajil_onooh_id': rec.id if rec else False,
             })
             
             rec.write({
@@ -130,14 +213,20 @@ class AjilOnooh(models.Model):
     def action_start(self):
         """Ажил эхлүүлэх"""
         for rec in self:
+            if rec.state != 'assigned':
+                raise ValidationError("Зөвхөн оноогдсон ажлыг эхлүүлэх боломжтой!")
+            
             rec.state = 'in_progress'
             if rec.ajil_id:
                 rec.ajil_id.state = 'in_progress'
-            rec.message_post(body="Ажил эхэллээ.")
+            # rec.message_post(body="Ажил эхэллээ.")
 
     def action_done(self):
         """Ажил дуусгах"""
         for rec in self:
+            if rec.state != 'in_progress':
+                raise ValidationError("Зөвхөн явагдаж буй ажлыг дуусгах боломжтой!")
+            
             rec.write({
                 'state': 'done',
                 'end_date': fields.Datetime.now(),
@@ -145,11 +234,14 @@ class AjilOnooh(models.Model):
             })
             if rec.ajil_id:
                 rec.ajil_id.state = 'done'
-            rec.message_post(body="Ажил амжилттай дууслаа.")
+            # rec.message_post(body="Ажил амжилттай дууслаа.")
 
     def action_cancel(self):
         """Ажил цуцлах"""
         for rec in self:
+            if rec.state == 'done':
+                raise ValidationError("Дууссан ажлыг цуцлах боломжгүй!")
+            
             rec.state = 'cancel'
             if rec.ajil_id:
                 rec.ajil_id.state = 'cancel'
@@ -165,8 +257,8 @@ class AjilOnooh(models.Model):
 
     # 🔹 View-д зөвхөн Huselt-ээр filter хийх
     @api.model
-    def search(self, args, offset=0, limit=None, order=None, count=False):
+    def search(self, domain, offset=0, limit=None, order=None):
         if self.env.context.get('filter_huselt_id'):
             huselt_id = self.env.context['filter_huselt_id']
-            args = [('huselt_id', '=', huselt_id)] + args
-        return super().search(args, offset=offset, limit=limit, order=order, count=count)
+            domain = [('huselt_id', '=', huselt_id)] + domain
+        return super().search(domain, offset=offset, limit=limit, order=order)

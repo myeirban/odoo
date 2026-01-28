@@ -16,7 +16,7 @@ class Huselt(models.Model):
     description = fields.Text(
         string="Хүсэлтийн тайлбар"
     )
-
+    
     # Хүсэлт явуулж буй хэрэглэгч
     user_id = fields.Many2one(
         'res.users',
@@ -24,7 +24,10 @@ class Huselt(models.Model):
         default=lambda self: self.env.user,
         readonly=True
     )
-
+    is_done = fields.Boolean(
+        string = "Ажил дууссан эсэх",
+        store = True
+    )
     # Хүсэлт явуулсан хүний ажилтан record (HR)
     employee_id = fields.Many2one(
         'hr.employee',
