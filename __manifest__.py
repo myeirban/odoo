@@ -1,18 +1,21 @@
 {
     'name': 'Mandal Help Desk Module',
-    'version' : '1.0.0',
+    'version': '1.0.5',
     'license': 'LGPL-3',
-    'summary' : 'ene bol help desknii tuhai modul baigaa yum.',
-    'description' : 'yamar neg heltsiin mergejilten(ajiltan)busad bolon ooriin heltsiin ajilchind ajliin huselt yavuulah burtgeliig hyanadag baih modul.',
-    'author' : 'myeirban bilimkhan',
-    'depends':['base','hr'],
+    'summary': 'Хэлтэс доторх ажлын хүсэлт, удирдлагын систем',
+    'description': '''
+    Хэлтсийн ажилчид бусад хэлтэс эсвэл өөрийн хэлтэст ажлын хүсэлт гаргах,
+    захирал ажил оноох, ажлын урсгалыг хянах систем.
+    ''',
+    'author': 'myeirban bilimkhan',
+    'depends': ['base', 'hr', 'mail'],
     'data': [
-    'security/ir.model.access.csv',
-    'views/actions.xml',
-    'views/menu.xml',
-     ],
-
+        'security/helpdesk_groups.xml',
+        'security/security.xml',
+        'security/ir.model.access.csv',
+        'views/actions.xml',
+        'views/menu.xml',
+    ],
+    'installable': True,
     'application': True,
-
-
 }

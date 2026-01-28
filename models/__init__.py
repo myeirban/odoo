@@ -1,4 +1,5 @@
-from . import nuur_huudas
-from . import hiih_ajluud
-from . import ooriin_heltesiin_hund_ajil_onooh
-from . import huseltiin_huudas
+from . import nuur
+from . import ajil
+from . import ajil_onooh
+from . import huselt
+

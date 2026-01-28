@@ -3,28 +3,75 @@
   <menuitem
     id="menu_mandal_help_desk_root"
     name="Mandal Help Desk"
-    sequence="0" />
-  <!-- CHILD MENU -->
+    sequence="0"
+    web_icon="helpdesk,static/description/icon.png" />
+
+  <!-- НҮҮР ХУУДАС -->
   <menuitem
     id="menu_nuur_huudas"
     name="Нүүр Хуудас"
     parent="menu_mandal_help_desk_root"
-    action="action_nuur_huudas" />
+    action="action_nuur_huudas"
+    sequence="1" />
 
-  <menuitem
-    id="menu_hiih_ajluud"
-    name="Хийх Ажлууд"
-    parent="menu_mandal_help_desk_root"
-    action="action_hiih_ajluud" />
-  <menuitem
-    id="heltesiin_ter_ajiltand_ajil_onooh"
-    name="Захирлын булан"
-    parent="menu_mandal_help_desk_root"
-    action="action_heltesiin_humuusd_ajil_onooh"
-  />
+  <!-- ХҮСЭЛТ ЯВУУЛАХ -->
   <menuitem
     id="huselt_yavuulah"
-    name="Хүсэлт явуулах хуудас"
+    name="Хүсэлт явуулах"
     parent="menu_mandal_help_desk_root"
-    action="action_huseltiin_huudas" />
+    action="action_huseltiin_huudas"
+    sequence="2" />
+
+  <!-- МИНИЙ АЖЛУУД submenu -->
+  <menuitem
+    id="menu_my_tasks"
+    name="Миний ажлууд"
+    parent="menu_mandal_help_desk_root"
+    sequence="3" />
+
+  <menuitem
+    id="menu_my_assigned_tasks"
+    name="Надад оноогдсон"
+    parent="menu_my_tasks"
+    action="action_my_assigned_tasks"
+    sequence="1" />
+
+  <menuitem
+    id="menu_my_department_tasks"
+    name="Миний хэлтсийн ажлууд"
+    parent="menu_my_tasks"
+    action="action_my_department_tasks"
+    sequence="2" />
+
+  <menuitem
+    id="menu_my_created_tasks"
+    name="Миний үүсгэсэн ажлууд"
+    parent="menu_my_tasks"
+    action="action_my_created_tasks"
+    sequence="3" />
+
+  <!-- ЗАХИРГАА (Boss only) -->
+  <menuitem
+    id="menu_admin"
+    name="Захиргаа"
+    parent="menu_mandal_help_desk_root"
+    groups="helpdesk.group_helpdesk_boss"
+    sequence="10" />
+
+  <menuitem
+    id="heltesiin_ter_ajiltand_ajil_onooh"
+    name="Ажил оноох"
+    parent="menu_admin"
+    action="action_ajil_onooh"
+    groups="helpdesk.group_helpdesk_boss"
+    sequence="1" />
+
+  <menuitem
+    id="menu_all_tasks"
+    name="Бүх ажлууд"
+    parent="menu_admin"
+    action="action_hiih_ajluud"
+    groups="helpdesk.group_helpdesk_boss"
+    sequence="2" />
+
 </odoo>

@@ -1,24 +1,322 @@
 <odoo>
-
+  <!-- Нүүр хуудас Action -->
   <record id="action_nuur_huudas" model="ir.actions.act_window">
     <field name="name">Нүүр Хуудас</field>
     <field name="res_model">mandal.helpdesk.nuur</field>
     <field name="view_mode">form</field>
   </record>
 
+  <!-- Хийх Ажлууд Action -->
   <record id="action_hiih_ajluud" model="ir.actions.act_window">
     <field name="name">Хийх Ажлууд</field>
     <field name="res_model">mandal.helpdesk.ajil</field>
     <field name="view_mode">tree,form</field>
+    <field name="domain">[('assigned_user_id', '=', uid)]</field>
+    <field name="context">{'search_default_my_tasks': 1}</field>
   </record>
-  <record id="action_heltesiin_humuusd_ajil_onooh" model="ir.actions.act_window">
-    <field name="name">Тухайн хэлтэсийн тэр ажилтанд ажил оноох</field>
-    <field name="res_model">mandal.helpdesk.ooriinbolonbusad.heltesd.ajil.onooh</field>
+
+  <!-- Надад оноогдсон ажлууд Action -->
+  <record id="action_my_assigned_tasks" model="ir.actions.act_window">
+    <field name="name">Надад оноогдсон ажлууд</field>
+    <field name="res_model">mandal.helpdesk.ajil</field>
     <field name="view_mode">tree,form</field>
+    <field name="domain">[('assigned_user_id', '=', uid)]</field>
+    <field name="context">{'search_default_assigned_to_me': 1}</field>
   </record>
+
+  <!-- Миний хэлтсийн ажлууд Action -->
+  <record id="action_my_department_tasks" model="ir.actions.act_window">
+    <field name="name">Миний хэлтсийн ажлууд</field>
+    <field name="res_model">mandal.helpdesk.ajil</field>
+    <field name="view_mode">tree,form</field>
+    <field name="context">{'search_default_my_department': 1}</field>
+  </record>
+
+  <!-- Миний үүсгэсэн ажлууд Action -->
+  <record id="action_my_created_tasks" model="ir.actions.act_window">
+    <field name="name">Миний үүсгэсэн ажлууд</field>
+    <field name="res_model">mandal.helpdesk.ajil</field>
+    <field name="view_mode">tree,form</field>
+    <field name="domain">[('creator_user_id', '=', uid)]</field>
+  </record>
+
+  <!-- Ажил оноох Action (Захирал) -->
+  <record id="action_ajil_onooh" model="ir.actions.act_window">
+    <field name="name">Ажил оноох</field>
+    <field name="res_model">mandal.helpdesk.ajil.onooh</field>
+    <field name="view_mode">tree,form</field>
+    <field name="context">{'search_default_draft': 1}</field>
+  </record>
+
+  <!-- Хүсэлтийн хуудас Action -->
   <record id="action_huseltiin_huudas" model="ir.actions.act_window">
     <field name="name">Хүсэлтийн хуудас</field>
     <field name="res_model">mandal.helpdesk.huselt</field>
     <field name="view_mode">tree,form</field>
   </record>
+
+  <!-- ============ VIEW DEFINITIONS ============ -->
+
+  <!-- Хүсэлт Tree View -->
+  <record id="view_huselt_tree" model="ir.ui.view">
+    <field name="name">mandal.helpdesk.huselt.tree</field>
+    <field name="model">mandal.helpdesk.huselt</field>
+    <field name="arch" type="xml">
+      <tree string="Хүсэлтүүд">
+        <field name="name" />
+        <field name="user_id" />
+        <field name="department_id" />
+        <field name="sender_department_id" />
+        <field name="target_department_id" />
+        <field name="assigned_department_id" />
+      </tree>
+    </field>
+  </record>
+
+  <!-- Хүсэлт Form View -->
+  <record id="view_huselt_form" model="ir.ui.view">
+    <field name="name">mandal.helpdesk.huselt.form</field>
+    <field name="model">mandal.helpdesk.huselt</field>
+    <field name="arch" type="xml">
+      <form string="Хүсэлт">
+        <sheet>
+          <group>
+            <group>
+              <field name="name" placeholder="Хүсэлтийн нэр" />
+              <field name="user_id" readonly="1" />
+              <field name="employee_id" readonly="1" />
+              <field name="department_id" readonly="1" />
+            </group>
+            <group>
+              <field name="target_department_id" placeholder="Илгээх хэлтэс" required="1" />
+              <field name="sender_department_id" readonly="1" />
+              <field name="assigned_department_id" readonly="1" />
+            </group>
+          </group>
+          <group>
+            <field name="description" placeholder="Хүсэлтийн тайлбар..." />
+          </group>
+        </sheet>
+        <div class="oe_chatter">
+          <field name="message_follower_ids" />
+          <field name="message_ids" />
+        </div>
+      </form>
+    </field>
+  </record>
+
+  <!-- Ажил оноох Tree View -->
+  <record id="view_ajil_onooh_tree" model="ir.ui.view">
+    <field name="name">mandal.helpdesk.ajil.onooh.tree</field>
+    <field name="model">mandal.helpdesk.ajil.onooh</field>
+    <field name="arch" type="xml">
+      <tree string="Ажил оноох" decoration-info="state=='draft'" decoration-success="state=='done'"
+        decoration-warning="state=='assigned'" decoration-primary="state=='in_progress'">
+        <field name="name" />
+        <field name="huselt_id" />
+        <field name="department_id" />
+        <field name="assigned_user_id" />
+        <field name="state" widget="badge" decoration-info="state=='draft'"
+          decoration-success="state=='done'" decoration-warning="state=='assigned'" />
+        <field name="progress" widget="progressbar" />
+        <field name="deadline" />
+      </tree>
+    </field>
+  </record>
+
+  <!-- Ажил оноох Form View -->
+  <record id="view_ajil_onooh_form" model="ir.ui.view">
+    <field name="name">mandal.helpdesk.ajil.onooh.form</field>
+    <field name="model">mandal.helpdesk.ajil.onooh</field>
+    <field name="arch" type="xml">
+      <form string="Ажил оноох">
+        <header>
+          <button name="action_assign" string="Ажилтанд оноох" type="object" class="oe_highlight"
+            invisible="state != 'draft'" />
+          <button name="action_start" string="Эхлүүлэх" type="object" class="oe_highlight"
+            invisible="state != 'assigned'" />
+          <button name="action_done" string="Дуусгах" type="object" class="oe_highlight"
+            invisible="state != 'in_progress'" />
+          <button name="action_cancel" string="Цуцлах" type="object"
+            invisible="state not in ['draft', 'assigned', 'in_progress']" />
+          <field name="state" widget="statusbar" statusbar_visible="draft,assigned,in_progress,done" />
+        </header>
+        <sheet>
+          <group>
+            <group>
+              <field name="name" />
+              <field name="huselt_id" readonly="1" />
+              <field name="department_id" />
+              <field name="assigned_user_id" />
+            </group>
+            <group>
+              <field name="creator_id" readonly="1" />
+              <field name="deadline" />
+              <field name="start_date" readonly="1" />
+              <field name="end_date" readonly="1" />
+              <field name="progress" widget="progressbar" />
+            </group>
+          </group>
+          <group>
+            <field name="description" placeholder="Ажлын тайлбар..." />
+          </group>
+        </sheet>
+        <div class="oe_chatter">
+          <field name="message_follower_ids" />
+          <field name="activity_ids" />
+          <field name="message_ids" />
+        </div>
+      </form>
+    </field>
+  </record>
+
+  <!-- Ажил оноох Search View -->
+  <record id="view_ajil_onooh_search" model="ir.ui.view">
+    <field name="name">mandal.helpdesk.ajil.onooh.search</field>
+    <field name="model">mandal.helpdesk.ajil.onooh</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name" />
+        <field name="assigned_user_id" />
+        <field name="department_id" />
+        <filter string="Ноорог" name="draft" domain="[('state','=','draft')]" />
+        <filter string="Оноогдсон" name="assigned" domain="[('state','=','assigned')]" />
+        <filter string="Явагдаж байна" name="in_progress" domain="[('state','=','in_progress')]" />
+        <filter string="Дууссан" name="done" domain="[('state','=','done')]" />
+        <group expand="0" string="Бүлэглэх">
+          <filter string="Төлөв" name="group_by_state" context="{'group_by':'state'}" />
+          <filter string="Хэлтэс" name="group_by_department" context="{'group_by':'department_id'}" />
+          <filter string="Ажилтан" name="group_by_user" context="{'group_by':'assigned_user_id'}" />
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <!-- Ажил Tree View -->
+  <record id="view_ajil_tree" model="ir.ui.view">
+    <field name="name">mandal.helpdesk.ajil.tree</field>
+    <field name="model">mandal.helpdesk.ajil</field>
+    <field name="arch" type="xml">
+      <tree string="Ажлууд" decoration-info="state=='draft'" decoration-success="state=='done'"
+        decoration-warning="state=='assigned'" decoration-primary="state=='in_progress'">
+        <field name="name" />
+        <field name="assigned_user_id" />
+        <field name="department_id" />
+        <field name="state" widget="badge" decoration-info="state in ['draft','assigned']"
+          decoration-success="state=='done'" decoration-warning="state=='in_progress'" />
+        <field name="priority" widget="priority" />
+        <field name="progress" widget="progressbar" />
+        <field name="deadline" />
+      </tree>
+    </field>
+  </record>
+
+  <!-- Ажил Form View -->
+  <record id="view_ajil_form" model="ir.ui.view">
+    <field name="name">mandal.helpdesk.ajil.form</field>
+    <field name="model">mandal.helpdesk.ajil</field>
+    <field name="arch" type="xml">
+      <form string="Ажил">
+        <header>
+          <button name="action_accept" string="Хүлээн авах" type="object" class="oe_highlight"
+            invisible="state != 'draft'" />
+          <button name="action_start" string="Эхлүүлэх" type="object" class="oe_highlight"
+            invisible="state != 'assigned'" />
+          <button name="action_done" string="Дуусгах" type="object" class="oe_highlight"
+            invisible="state != 'in_progress'" />
+          <button name="action_cancel" string="Цуцлах" type="object"
+            invisible="state not in ['draft', 'assigned', 'in_progress']" />
+          <field name="state" widget="statusbar" statusbar_visible="draft,assigned,in_progress,done" />
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <h1>
+              <field name="name" placeholder="Ажлын нэр..." />
+            </h1>
+          </div>
+          <group>
+            <group>
+              <field name="huselt_id" readonly="1" />
+              <field name="assigned_user_id" readonly="1" />
+              <field name="department_id" readonly="1" />
+              <field name="creator_user_id" readonly="1" />
+            </group>
+            <group>
+              <field name="priority" widget="priority" />
+              <field name="deadline" />
+              <field name="start_date" readonly="1" />
+              <field name="end_date" readonly="1" />
+              <field name="progress" widget="progressbar" />
+            </group>
+          </group>
+          <notebook>
+            <page string="Тайлбар">
+              <field name="description" placeholder="Ажлын дэлгэрэнгүй тайлбар..." />
+            </page>
+          </notebook>
+        </sheet>
+        <div class="oe_chatter">
+          <field name="message_follower_ids" />
+          <field name="activity_ids" />
+          <field name="message_ids" />
+        </div>
+      </form>
+    </field>
+  </record>
+
+  <!-- Ажил Search View -->
+  <record id="view_ajil_search" model="ir.ui.view">
+    <field name="name">mandal.helpdesk.ajil.search</field>
+    <field name="model">mandal.helpdesk.ajil</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name" />
+        <field name="assigned_user_id" />
+        <field name="department_id" />
+        <filter string="Надад оноогдсон" name="assigned_to_me"
+          domain="[('assigned_user_id','=',uid)]" />
+        <filter string="Миний хэлтэс" name="my_department"
+          domain="[('department_id.member_ids.user_id','=',uid)]" />
+        <filter string="Миний үүсгэсэн" name="my_created" domain="[('creator_user_id','=',uid)]" />
+        <separator />
+        <filter string="Ноорог" name="draft" domain="[('state','=','draft')]" />
+        <filter string="Хүн авсан" name="assigned" domain="[('state','=','assigned')]" />
+        <filter string="Явагдаж байна" name="in_progress" domain="[('state','=','in_progress')]" />
+        <filter string="Дууссан" name="done" domain="[('state','=','done')]" />
+        <group expand="0" string="Бүлэглэх">
+          <filter string="Төлөв" name="group_by_state" context="{'group_by':'state'}" />
+          <filter string="Хэлтэс" name="group_by_department" context="{'group_by':'department_id'}" />
+          <filter string="Ажилтан" name="group_by_assigned_user"
+            context="{'group_by':'assigned_user_id'}" />
+          <filter string="Анхаарал" name="group_by_priority" context="{'group_by':'priority'}" />
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <!-- Хүсэлт Domain Rule -->
+  <record id="rule_huselt_my_department" model="ir.rule">
+    <field name="name">Хүсэлт - өөрийн хэлтэс эсвэл үүсгэсэн</field>
+    <field name="model_id" ref="model_mandal_helpdesk_huselt" />
+    <field name="domain_force">
+      ['|',
+      ('assigned_department_id','in', user.employee_ids.mapped('department_id').ids),
+      ('user_id','=',user.id)]
+    </field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]" />
+  </record>
+
+  <!-- Ажил Domain Rule -->
+  <record id="rule_ajil_visibility" model="ir.rule">
+    <field name="name">Ажил - Харах эрх</field>
+    <field name="model_id" ref="model_mandal_helpdesk_ajil" />
+    <field name="domain_force">
+      ['|', '|',
+      ('assigned_user_id','=',user.id),
+      ('creator_user_id','=',user.id),
+      ('department_id','in', user.employee_ids.mapped('department_id').ids)]
+    </field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]" />
+  </record>
+
 </odoo>

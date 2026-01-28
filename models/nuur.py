@@ -6,39 +6,39 @@ class NuurHuudas(models.Model):
 
     user_id = fields.Many2one(
         'res.users',
-        string="Nevtersen Hereglegch",
+        string="Нэвтэрсэн хэрэглэгч",
         default=lambda self: self.env.user,
         readonly=True
     )
 
     job_position_id = fields.Many2one(
         'hr.job',
-        string="Job Position",
+        string="Ажлын албан тушаал",
         compute="_compute_job_position",
         store=True
     )
     employee_id = fields.Many2one(
         'hr.employee',
-        string="Ajiltnii Burtgel",
+        string="Ажилтны бүртгэл",
         compute="_compute_employee",
         store=True
     )
 
     name = fields.Char(
         related="employee_id.name",
-        string="Ajiltnii Ner",
+        string="Ажилтны нэр",
         store=True
     )
 
     job_title = fields.Char(
         related="employee_id.job_title",
-        string="Mergejil",
+        string="Мэргэжил",
         store=True
     )
 
     department_id = fields.Many2one(
         related="employee_id.department_id",
-        string="Heltes",
+        string="Хэлтэс",
         store=True
     )
 

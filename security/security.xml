@@ -1,0 +1,22 @@
+<odoo>
+  <data>
+    <!-- Category -->
+    <record id="module_category_helpdesk" model="ir.module.category">
+      <field name="name">Helpdesk</field>
+      <field name="sequence">10</field>
+    </record>
+
+    <!-- Employee Group -->
+    <record id="group_helpdesk_employee" model="res.groups">
+      <field name="name">Helpdesk Employee</field>
+      <field name="category_id" ref="module_category_helpdesk" />
+    </record>
+
+    <!-- Boss/Manager Group -->
+    <record id="group_helpdesk_boss" model="res.groups">
+      <field name="name">Helpdesk Boss</field>
+      <field name="category_id" ref="module_category_helpdesk" />
+      <field name="implied_ids" eval="[(4, ref('group_helpdesk_employee'))]" />
+    </record>
+  </data>
+</odoo>
